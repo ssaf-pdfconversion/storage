@@ -1,7 +1,6 @@
 interface ApiInterface {
  
     storeMetadata(datos: {
-        idConversion : number,
         usuarioId: number;
         tipoArchivoId: number;
         size: number;
