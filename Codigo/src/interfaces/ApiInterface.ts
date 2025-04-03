@@ -1,19 +1,14 @@
+import Metadata from "./types/Metadata.js";
+
 export interface ApiInterface {
- 
-    storeMetadata(datos: {
-        usuarioId: number;
-        tipoArchivoId: number;
-        size: number;
-        fechaHora: string; 
-    }): Promise<object>;
+  storeMetadata(datos: Metadata): Promise<object>;
 
-    
-    getTotalStorage(usuarioId: number): Promise<number>;
+  getTotalStorage(usuarioId: number): Promise<number>;
 
-
-    getStatistics(
-        usuarioId: number, 
-        fechaInicio: string, 
-        fechaFin: string, 
-        tipoArchivoId?: number): Promise<object>;
+  getStatistics(
+    usuarioId: number,
+    fechaInicio: string,
+    fechaFin: string,
+    tipoArchivoId?: number
+  ): Promise<object>;
 }
