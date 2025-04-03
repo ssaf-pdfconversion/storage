@@ -1,14 +1,15 @@
+import AppResponse from "./types/AppResponse.js";
 import Metadata from "./types/Metadata.js";
 
 export interface ApiInterface {
-  storeMetadata(datos: Metadata): Promise<object>;
+  storeMetadata(datos: Metadata): Promise<AppResponse<boolean>>;
 
-  getTotalStorage(usuarioId: number): Promise<number>;
+  getTotalStorage(usuarioId: number): Promise<AppResponse<number>>;
 
   getStatistics(
     usuarioId: number,
     fechaInicio: string,
     fechaFin: string,
     tipoArchivoId?: number
-  ): Promise<object>;
+  ): Promise<AppResponse<any[]>>;
 }
