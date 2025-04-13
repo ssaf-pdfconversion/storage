@@ -10,6 +10,7 @@ export class ControllerData {
             console.log("Controller storemetada activo");
             const metadata = req.body; 
             const result = await apiService.storeMetadata(metadata);
+            console.log("Enviando respuesta:", result);
             res.status(result.status).json(result);
         } catch (error) {
             res.status(500).json({
@@ -41,7 +42,7 @@ export class ControllerData {
             const usuarioId = Number(req.query.usuarioId);
             const fechaInicio = req.query.fechaInicio as string;
             const fechaFin = req.query.fechaFin as string;
-            const tipoArchivoId = req.query.tipoArchivoId ? Number(req.query.tipoArchivoId): undefined;
+            const tipoArchivoId = Number (req.query.tipoArchivoId);
             
             const result = await apiService.getStatistics(
                 usuarioId,
