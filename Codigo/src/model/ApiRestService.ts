@@ -1,8 +1,11 @@
 
+import { response } from "express";
 import pool from "../db/Database.js";
 import { ApiInterface } from "../interfaces/ApiInterface.js";
 import  AppResponse  from "../interfaces/types/AppResponse.js";
 import  Metadata  from "../interfaces/types/Metadata.js";
+import Statistics from "../interfaces/types/Statistics.js";
+import { format, eachDayOfInterval } from 'date-fns';
 
 
 function formatDateForMySQL(dateStr: string): string {
@@ -130,14 +133,65 @@ export class ApiRestService implements ApiInterface {
 
     }
 
-    async getStatistics(usuarioId: number, fechaInicio: string, fechaFin: string, tipoArchivoId?: number): Promise<AppResponse<any>> {
+    async getStatistics(usuarioId: number, fechaInicio: string, fechaFin: string, tipoArchivoId: number): Promise<AppResponse<Statistics[]>> {
 
-        // Me dio sueño y no se que va
-        
-        return {
-            status: 200,
-            message: "Datos guardados correctamente",
-            data:1,
-        };
+        try{
+            console.log("Valores recibidos:", {
+                usuarioId,
+                fechaInicio,
+                fechaFin,
+                tipoArchivoId
+              })
+
+            const rows = await pool.query
+            ("SELECT DATE(CONVERT_TZ(CONVERSION_TIMESTAMP, '+00:00', '-05:00')) AS date, SUM(SIZE) AS total FROM conversions WHERE USER_ID = ? AND DATE(CONVERT_TZ(CONVERSION_TIMESTAMP, '+00:00', '-05:00')) BETWEEN ? AND ? AND FILE_TYPE_ID = ? GROUP BY date ORDER BY date",
+                [usuarioId,fechaInicio, fechaFin, tipoArchivoId ]
+            )
+
+            console.log("Resultado de query:", rows);
+            
+            const conversionesPorFecha: Record<string, number> = {};
+            for (const row of rows) {
+              const fecha = format(new Date(row.date), 'yyyy-MM-dd');
+              const totalMB = +(row.total / (1024 * 1024)).toFixed(2); 
+              conversionesPorFecha[fecha] = totalMB;
+            }
+
+            function parseFechaLocal(fechaStr: string): Date {
+                const [año, mes, dia] = fechaStr.split('-').map(Number);
+                return new Date(año, mes - 1, dia); 
+              }
+
+            const fechas = eachDayOfInterval({
+                start: parseFechaLocal(fechaInicio),
+                end: parseFechaLocal(fechaFin)
+              });
+            
+              const estadisticas: Statistics[] = fechas.map(dia => {
+                const fechaStr = format(dia, 'yyyy-MM-dd');
+                return {
+                  date: fechaStr,
+                  totalMB: conversionesPorFecha[fechaStr] ?? 0
+                };
+              }
+            );
+
+            return {
+                status: 200,
+                message: "Estadísticas diarias obtenidas correctamente",
+                data: estadisticas
+                
+            };
+
+        }catch (error){
+            console.log(" Error al obtener la estadística: ", error);
+            return {
+                status: 500,
+                message: "Error al obtener la estadística",
+                data: []
+                
+            };
+
+        }
     }
 }
