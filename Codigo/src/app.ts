@@ -5,10 +5,10 @@ import http from "http";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import dotenv from 'dotenv';
+dotenv.config();
 
-
-const APP_HOST = "localhost";
-const APP_PORT = 3000;
+import { APP_HOST, APP_PORT } from './config.js';
 
 export const app = express(); 
 app.use(json());
