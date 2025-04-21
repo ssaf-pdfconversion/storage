@@ -40,7 +40,7 @@ export class ApiRestService implements ApiInterface {
             for (const conversion of datos.transaction.conversions){
 
                 const timestampQueryFormattedConversion = formatDateForMySQL(conversion.conversionTimestamp);
-                const byteSize = conversion.size * 1024 * 1024;
+                
 
                 const conversionsResult : any = await conn.query(
                     "INSERT INTO conversions (USER_ID, TRANSACTIONS_ID, FILE_TYPE_ID, SIZE, CONVERSION_TIMESTAMP, CONVERSION_STATUS) VALUES (?, ?, ?, ?, ?, ?)",
@@ -48,7 +48,7 @@ export class ApiRestService implements ApiInterface {
                     conversion.userId,
                     transactionId,
                     conversion.fileTypeId,
-                    byteSize,
+                    conversion.size,
                     timestampQueryFormattedConversion,
                     conversion.conversionStatus ? 1 : 0,
                 ] 
@@ -78,7 +78,7 @@ export class ApiRestService implements ApiInterface {
         await conn.commit();
         
         return {
-            status: 200,
+            status: true,
             message: "Datos guardados correctamente",
             data: true,
         };
@@ -90,7 +90,7 @@ export class ApiRestService implements ApiInterface {
         console.log("Datos recibidos:", JSON.stringify(datos, null, 2));
         
         return {
-            status: 500,
+            status: false,
             message: "Error al guardar los datos desde el modelo",
             data: false,
         };
@@ -99,39 +99,38 @@ export class ApiRestService implements ApiInterface {
     }
 }
 
-    async getTotalStorage(usuarioId: number): Promise<AppResponse<number>> {
-        try {
-            console.log(usuarioId);
-            
+async getTotalStorage(usuarioId: number): Promise<AppResponse<number>> {
+    try {
+        console.log(usuarioId);
 
-            const rows = await pool.query ("SELECT SUM(SIZE) AS total FROM conversions WHERE USER_ID = ?",
-            [usuarioId]);
+        const rows = await pool.query(
+            "SELECT SUM(SIZE) AS total FROM conversions WHERE USER_ID = ?",
+            [usuarioId]
+        );
 
-            console.log("Resultado de query:", rows);
+        console.log("Resultado de query:", rows);
 
-            const totalBytes = rows?.[0]?.total ?? 0;
-            const total = +(totalBytes / (1024 * 1024)).toFixed(2);
+        const total = rows?.[0]?.total ?? 0;
+        const totalMB = total / (1024 * 1024);
 
-            return {
-                status: 200,
-                message: "Total de almacenamiento del usuario",
-                data:total,
-    
-            };
+        return {
+            status: true,
+            message: "Total de almacenamiento del usuario",
+            data: totalMB,
+        };
 
-        }catch(error){
-            console.log("Error al obtener almacenamiento total del usuario");
-            console.log(" Error al almacenar los datos:", error);
+    } catch (error) {
+        console.log("Error al obtener almacenamiento total del usuario");
+        console.log(" Error al almacenar los datos:", error);
 
-            return {
-                status: 500,
-                message: "Error al obtener almacenamiento total del usuario",
-                data:0,
-    
-            };
-        }
-
+        return {
+            status: false,
+            message: "Error al obtener almacenamiento total del usuario",
+            data: 0,
+        };
     }
+}
+
 
     async getStatistics(usuarioId: number, fechaInicio: string, fechaFin: string, tipoArchivoId: number): Promise<AppResponse<Statistics[]>> {
 
@@ -177,7 +176,7 @@ export class ApiRestService implements ApiInterface {
             );
 
             return {
-                status: 200,
+                status: true,
                 message: "Estadísticas diarias obtenidas correctamente",
                 data: estadisticas
                 
@@ -186,7 +185,7 @@ export class ApiRestService implements ApiInterface {
         }catch (error){
             console.log(" Error al obtener la estadística: ", error);
             return {
-                status: 500,
+                status: false,
                 message: "Error al obtener la estadística",
                 data: []
                 
