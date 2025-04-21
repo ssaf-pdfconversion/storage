@@ -1,5 +1,5 @@
 export default interface AppResponse<T> {
-  status: number;
+  status: boolean;
   message: string;
   data: T;
 }
