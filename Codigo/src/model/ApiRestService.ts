@@ -40,8 +40,6 @@ export class ApiRestService implements ApiInterface {
             for (const conversion of datos.transaction.conversions) {
                 const timestampQueryFormattedConversion = formatDateForMySQL(conversion.conversionTimestamp);
     
-                // Convertir de megabytes a bytes
-                const sizeInBytes = conversion.size * 1024 * 1024;
     
                 const conversionsResult: any = await conn.query(
                     `INSERT INTO conversions (
@@ -51,7 +49,7 @@ export class ApiRestService implements ApiInterface {
                         conversion.userId,
                         transactionId,
                         conversion.fileTypeId,
-                        sizeInBytes,
+                        conversion.size,
                         timestampQueryFormattedConversion,
                         conversion.conversionStatus ? 1 : 0,
                     ]
@@ -116,7 +114,7 @@ async getTotalStorage(usuarioId: number): Promise<AppResponse<number>> {
         console.log("Resultado de query:", rows);
 
         const total = rows?.[0]?.total ?? 0;
-        const totalMB = total / (1024 * 1024);
+        const totalMB = total * 0.000001;
 
         return {
             status: true,
@@ -157,7 +155,7 @@ async getTotalStorage(usuarioId: number): Promise<AppResponse<number>> {
             const conversionesPorFecha: Record<string, number> = {};
             for (const row of rows) {
               const fecha = format(new Date(row.date), 'yyyy-MM-dd');
-              const totalMB = +(row.total / (1024 * 1024)).toFixed(2); 
+              const totalMB = +(row.total * 0.000001).toFixed(10); 
               conversionesPorFecha[fecha] = totalMB;
             }
 
