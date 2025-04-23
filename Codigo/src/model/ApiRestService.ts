@@ -22,82 +22,87 @@ export class ApiRestService implements ApiInterface {
         console.log(datos);
         
         const conn = await pool.getConnection();
-
-        try{
-            
+    
+        try {
             await conn.beginTransaction();
-
+    
             // Tabla transacción
             const timestampQueryFormatted = formatDateForMySQL(datos.transaction.timestampQuery);
-
-            const transactionResult : any = await conn.query("INSERT INTO transactions (TIMESTAMP_QUERY)  VALUES (?)",
+    
+            const transactionResult: any = await conn.query(
+                "INSERT INTO transactions (TIMESTAMP_QUERY) VALUES (?)",
                 [timestampQueryFormatted]
             );
-
+    
             const transactionId = transactionResult.insertId;
-
+    
             // Tabla conversiones
-            for (const conversion of datos.transaction.conversions){
-
+            for (const conversion of datos.transaction.conversions) {
                 const timestampQueryFormattedConversion = formatDateForMySQL(conversion.conversionTimestamp);
-                
-
-                const conversionsResult : any = await conn.query(
-                    "INSERT INTO conversions (USER_ID, TRANSACTIONS_ID, FILE_TYPE_ID, SIZE, CONVERSION_TIMESTAMP, CONVERSION_STATUS) VALUES (?, ?, ?, ?, ?, ?)",
-                [
-                    conversion.userId,
-                    transactionId,
-                    conversion.fileTypeId,
-                    conversion.size,
-                    timestampQueryFormattedConversion,
-                    conversion.conversionStatus ? 1 : 0,
-                ] 
-            );
-            const conversionId = conversionsResult.insertId;
-
-            // Tabla iteraciones
-            for (const iteration of conversion.iterations){
-
-                const timestampFormattedInitial = formatDateForMySQL(iteration.initialTimestamp);
-                const timestampFormattedreturn = formatDateForMySQL(iteration.returnTimestamp);
-
-                await conn.query ("INSERT INTO iterations (CONVERSIONS_ID, INITIAL_TIMESTAMP, CONVERSION_SUCCESS, MESSAGE, RETURN_TIMESTAMP, NODE_ID) VALUES (?, ?, ?, ?, ?, ?)",
+    
+                // Convertir de megabytes a bytes
+                const sizeInBytes = conversion.size * 1024 * 1024;
+    
+                const conversionsResult: any = await conn.query(
+                    `INSERT INTO conversions (
+                        USER_ID, TRANSACTIONS_ID, FILE_TYPE_ID, SIZE, CONVERSION_TIMESTAMP, CONVERSION_STATUS
+                    ) VALUES (?, ?, ?, ?, ?, ?)`,
                     [
-                        conversionId,
-                        timestampFormattedInitial,
-                        iteration.conversionSuccess ? 1 : 0,
-                        iteration.message,
-                        timestampFormattedreturn,
-                        iteration.nodeId
-                        
+                        conversion.userId,
+                        transactionId,
+                        conversion.fileTypeId,
+                        sizeInBytes,
+                        timestampQueryFormattedConversion,
+                        conversion.conversionStatus ? 1 : 0,
                     ]
-                );   
+                );
+    
+                const conversionId = conversionsResult.insertId;
+    
+                // Tabla iteraciones
+                for (const iteration of conversion.iterations) {
+                    const timestampFormattedInitial = formatDateForMySQL(iteration.initialTimestamp);
+                    const timestampFormattedReturn = formatDateForMySQL(iteration.returnTimestamp);
+    
+                    await conn.query(
+                        `INSERT INTO iterations (
+                            CONVERSIONS_ID, INITIAL_TIMESTAMP, CONVERSION_SUCCESS, MESSAGE, RETURN_TIMESTAMP, NODE_ID
+                        ) VALUES (?, ?, ?, ?, ?, ?)`,
+                        [
+                            conversionId,
+                            timestampFormattedInitial,
+                            iteration.conversionSuccess ? 1 : 0,
+                            iteration.message,
+                            timestampFormattedReturn,
+                            iteration.nodeId
+                        ]
+                    );
+                }
             }
+    
+            await conn.commit();
+    
+            return {
+                status: true,
+                message: "Datos guardados correctamente",
+                data: true,
+            };
+    
+        } catch (error) {
+            await conn.rollback();
+            console.log(" Error al almacenar los datos:", error);
+            console.log("Datos recibidos:", JSON.stringify(datos, null, 2));
+    
+            return {
+                status: false,
+                message: "Error al guardar los datos desde el modelo",
+                data: false,
+            };
+        } finally {
+            conn.release();
         }
-        
-        await conn.commit();
-        
-        return {
-            status: true,
-            message: "Datos guardados correctamente",
-            data: true,
-        };
-
-    }catch (error){
-
-        await conn.rollback();
-        console.log(" Error al almacenar los datos:", error);
-        console.log("Datos recibidos:", JSON.stringify(datos, null, 2));
-        
-        return {
-            status: false,
-            message: "Error al guardar los datos desde el modelo",
-            data: false,
-        };
-    } finally {
-        conn.release();
     }
-}
+    
 
 async getTotalStorage(usuarioId: number): Promise<AppResponse<number>> {
     try {
