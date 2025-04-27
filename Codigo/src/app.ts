@@ -32,8 +32,8 @@ app.use((req, res, next) => {
   })
 });
 
-const keyPath = path.join(__dirname, '..', 'certs', 'storagessl.key');
-const certPath = path.join(__dirname, '..', 'certs', 'storagessl.crt');
+const keyPath = path.join(__dirname, '..', 'certs', 'storagesslkey.pem');
+const certPath = path.join(__dirname, '..', 'certs', 'storagesslcrt.pem');
 
 console.log(keyPath)
 console.log(certPath)
