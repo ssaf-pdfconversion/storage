@@ -37,32 +37,23 @@ app.use((req, res, next) => {
 const keyPath = path.join(__dirname, '..', 'dist', 'certs', 'storagessl.key');
 const certPath = path.join(__dirname, '..', 'dist', 'certs', 'storagessl.crt');
 
+const keyPath  = path.resolve(__dirname, 'keys', 'key.pem');
+const certPath = path.resolve(__dirname, 'keys', 'cert.pem');
+
+const options = {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 const sslOptions = {
   key: fs.readFileSync(path.join(__dirname, 'certs', 'storagessl.key')),
   cert: fs.readFileSync(path.join(__dirname, 'certs', 'storagessl.crt'))
-=======
-=======
->>>>>>> Stashed changes
-console.log(keyPath)
-console.log(certPath)
-
-const options = {
-  key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath)
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 };
 
+// Iniciar el servidor
+https.createServer(options, app)
+  .listen(APP_PORT, () => {
+    console.log("Servidor corriendo en" , APP_HOST, APP_PORT);
+  });
+ 
+  //corre
 
-https.createServer(sslOptions, app).listen(APP_PORT, () => {
-  console.log("Servidor HTTPS corriendo en", APP_HOST, APP_PORT);
-});
 
-
-http.createServer(app).listen(80, () => {
-  console.log("Servidor HTTP corriendo en puerto 80");
-});
