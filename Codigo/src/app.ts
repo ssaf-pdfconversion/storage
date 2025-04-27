@@ -1,7 +1,9 @@
 import express, { json } from "express";
-import {router} from "./routes/routes.js";
+import { router } from "./routes/routes.js";
 import cors from "cors"; 
+import https from "https";  // Usa https en vez de http
 import http from "http";
+import fs from "fs";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -20,13 +22,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use("/", router);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use('/static', express.static(path.join(__dirname, 'public')));
 
-app.use(function (req, res, next) {
-  res.send("Server on")
+app.use((req, res, next) => {
+  if (req.secure) {
+    return next();
+  }
+  res.redirect('https://' + req.headers.host + req.url);
 });
 
-http.createServer(app).listen(APP_PORT);
-console.log("Server on port", APP_HOST, APP_PORT);
+
+const sslOptions = {
+  key: fs.readFileSync(path.join(__dirname, 'certs', 'storagessl.key')),
+  cert: fs.readFileSync(path.join(__dirname, 'certs', 'storagessl.crt'))
+};
+
+
+https.createServer(sslOptions, app).listen(APP_PORT, () => {
+  console.log("Servidor HTTPS corriendo en", APP_HOST, APP_PORT);
+});
+
+
+http.createServer(app).listen(80, () => {
+  console.log("Servidor HTTP corriendo en puerto 80");
+});
