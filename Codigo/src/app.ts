@@ -34,10 +34,21 @@ app.use((req, res, next) => {
   res.redirect('https://' + req.headers.host + req.url);
 });
 
+const keyPath = path.join(__dirname, '..', 'dist', 'certs', 'storagessl.key');
+const certPath = path.join(__dirname, '..', 'dist', 'certs', 'storagessl.crt');
 
+<<<<<<< Updated upstream
 const sslOptions = {
   key: fs.readFileSync(path.join(__dirname, 'certs', 'storagessl.key')),
   cert: fs.readFileSync(path.join(__dirname, 'certs', 'storagessl.crt'))
+=======
+console.log(keyPath)
+console.log(certPath)
+
+const options = {
+  key: fs.readFileSync(keyPath),
+  cert: fs.readFileSync(certPath)
+>>>>>>> Stashed changes
 };
 
 
