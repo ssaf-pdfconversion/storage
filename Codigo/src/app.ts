@@ -27,7 +27,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use('/static', express.static(path.join(__dirname, 'public')));
 
-// Redirige HTTP a HTTPS
 app.use((req, res, next) => {
   if (req.secure) {
     return next();
@@ -35,18 +34,18 @@ app.use((req, res, next) => {
   res.redirect('https://' + req.headers.host + req.url);
 });
 
-// Lee los archivos SSL
+
 const sslOptions = {
   key: fs.readFileSync(path.join(__dirname, 'certs', 'storagessl.key')),
   cert: fs.readFileSync(path.join(__dirname, 'certs', 'storagessl.crt'))
 };
 
-// Levanta el servidor HTTPS
+
 https.createServer(sslOptions, app).listen(APP_PORT, () => {
   console.log("Servidor HTTPS corriendo en", APP_HOST, APP_PORT);
 });
 
-// Levanta también el servidor HTTP para redirigir a HTTPS
+
 http.createServer(app).listen(80, () => {
   console.log("Servidor HTTP corriendo en puerto 80");
 });
